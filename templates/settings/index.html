@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Settings - Nemy POS{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/settings.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="settings-wrapper">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">Settings</h1>
+    </div>
+
+    <div class="settings-container">
+        <!-- Settings Navigation -->
+        <div class="settings-nav">
+            <div class="nav flex-column nav-pills" role="tablist">
+                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#business">
+                    <i class="ri-store-2-line"></i> Business Profile
+                </button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#invoice">
+                    <i class="ri-bill-line"></i> Invoice Settings
+                </button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#payment">
+                    <i class="ri-bank-card-line"></i> Payment Methods
+                </button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tax">
+                    <i class="ri-percent-line"></i> Tax Settings
+                </button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#users">
+                    <i class="ri-team-line"></i> User Management
+                </button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#notifications">
+                    <i class="ri-notification-line"></i> Notifications
+                </button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#backup">
+                    <i class="ri-database-2-line"></i> Backup & Restore
+                </button>
+                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#integrations">
+                    <i class="ri-plug-line"></i> Integrations
+                </button>
+            </div>
+        </div>
+
+        <!-- Settings Content -->
+        <div class="settings-content">
+            <div class="tab-content">
+                <!-- Business Profile -->
+                <div class="tab-pane fade show active" id="business">
+                    <div class="settings-section">
+                        <h2>Business Profile</h2>
+                        <p class="text-muted">Manage your business information and branding</p>
+
+                        <form id="businessForm" class="mt-4">
+                            <div class="business-logo-upload">
+                                <img src="{{ business.logo.url|default:'static/img/default-logo.png' }}" 
+                                     alt="Business Logo" id="logoPreview">
+                                <div class="upload-overlay">
+                                    <i class="ri-upload-2-line"></i>
+                                    <span>Upload Logo</span>
+                                </div>
+                                <input type="file" id="logoInput" accept="image/*" hidden>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Business Name</label>
+                                    <input type="text" class="form-control" name="business_name" 
+                                           value="{{ business.name }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" name="phone" 
+                                           value="{{ business.phone }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" name="email" 
+                                           value="{{ business.email }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Website</label>
+                                    <input type="url" class="form-control" name="website" 
+                                           value="{{ business.website }}">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Address</label>
+                                    <textarea class="form-control" name="address" 
+                                              rows="3">{{ business.address }}</textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Currency</label>
+                                    <select class="form-select" name="currency">
+                                        <option value="NGN" {% if business.currency == 'NGN' %}selected{% endif %}>
+                                            Nigerian Naira (₦)
+                                        </option>
+                                        <option value="USD" {% if business.currency == 'USD' %}selected{% endif %}>
+                                            US Dollar ($)
+                                        </option>
+                                        <!-- Add more currencies as needed -->
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Time Zone</label>
+                                    <select class="form-select" name="timezone">
+                                        <option value="Africa/Lagos" 
+                                                {% if business.timezone == 'Africa/Lagos' %}selected{% endif %}>
+                                            Lagos (GMT+1)
+                                        </option>
+                                        <!-- Add more timezones as needed -->
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Invoice Settings -->
+                <div class="tab-pane fade" id="invoice">
+                    <div class="settings-section">
+                        <h2>Invoice Settings</h2>
+                        <p class="text-muted">Customize your invoice and receipt format</p>
+
+                        <form id="invoiceForm" class="mt-4">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Invoice Prefix</label>
+                                    <input type="text" class="form-control" name="invoice_prefix" 
+                                           value="{{ settings.invoice_prefix }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Next Invoice Number</label>
+                                    <input type="number" class="form-control" name="next_invoice_number" 
+                                           value="{{ settings.next_invoice_number }}">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Invoice Footer Text</label>
+                                    <textarea class="form-control" name="invoice_footer" 
+                                              rows="3">{{ settings.invoice_footer }}</textarea>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" 
+                                               name="show_tax" id="showTax" 
+                                               {% if settings.show_tax %}checked{% endif %}>
+                                        <label class="form-check-label" for="showTax">
+                                            Show tax details on invoice
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Payment Methods -->
+                <div class="tab-pane fade" id="payment">
+                    <div class="settings-section">
+                        <h2>Payment Methods</h2>
+                        <p class="text-muted">Configure available payment methods</p>
+
+                        <div class="payment-methods-list mt-4">
+                            {% for method in payment_methods %}
+                            <div class="payment-method-item">
+                                <div class="form-check form-switch">
+                                    <input type="checkbox" class="form-check-input" 
+                                           id="payment{{ method.id }}" 
+                                           {% if method.active %}checked{% endif %}>
+                                    <label class="form-check-label" for="payment{{ method.id }}">
+                                        {{ method.name }}
+                                    </label>
+                                </div>
+                                <button class="btn btn-sm btn-light" onclick="configurePayment('{{ method.id }}')">
+                                    <i class="ri-settings-3-line"></i>
+                                </button>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <button class="btn btn-outline-primary mt-3" onclick="addPaymentMethod()">
+                            <i class="ri-add-line"></i> Add Payment Method
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tax Settings -->
+                <div class="tab-pane fade" id="tax">
+                    <div class="settings-section">
+                        <h2>Tax Settings</h2>
+                        <p class="text-muted">Configure tax rates and rules</p>
+
+                        <div class="tax-rates-list mt-4">
+                            {% for tax in tax_rates %}
+                            <div class="tax-rate-item">
+                                <div class="tax-rate-info">
+                                    <h6>{{ tax.name }}</h6>
+                                    <p class="text-muted">{{ tax.rate }}%</p>
+                                </div>
+                                <div class="tax-rate-actions">
+                                    <button class="btn btn-sm btn-light" onclick="editTaxRate('{{ tax.id }}')">
+                                        <i class="ri-pencil-line"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-light text-danger" 
+                                            onclick="deleteTaxRate('{{ tax.id }}')">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <button class="btn btn-outline-primary mt-3" onclick="addTaxRate()">
+                            <i class="ri-add-line"></i> Add Tax Rate
+                        </button>
+                    </div>
+                </div>
+
+                <!-- User Management -->
+                <div class="tab-pane fade" id="users">
+                    <div class="settings-section">
+                        <h2>User Management</h2>
+                        <p class="text-muted">Manage staff accounts and permissions</p>
+
+                        <div class="users-list mt-4">
+                            {% for user in users %}
+                            <div class="user-item">
+                                <div class="user-info">
+                                    <div class="user-avatar">
+                                        {% if user.avatar %}
+                                        <img src="{{ user.avatar.url }}" alt="{{ user.name }}">
+                                        {% else %}
+                                        <div class="avatar-placeholder">
+                                            {{ user.name|make_list|first|upper }}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h6>{{ user.name }}</h6>
+                                        <p class="text-muted">{{ user.role }}</p>
+                                    </div>
+                                </div>
+                                <div class="user-actions">
+                                    <button class="btn btn-sm btn-light" onclick="editUser('{{ user.id }}')">
+                                        <i class="ri-pencil-line"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-light text-danger" 
+                                            onclick="deleteUser('{{ user.id }}')">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <button class="btn btn-outline-primary mt-3" onclick="addUser()">
+                            <i class="ri-user-add-line"></i> Add User
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Additional sections continue... -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Various Modals -->
+{% include 'settings/modals/payment_method.html' %}
+{% include 'settings/modals/tax_rate.html' %}
+{% include 'settings/modals/user.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/settings.js' %}"></script>
+{% endblock %}

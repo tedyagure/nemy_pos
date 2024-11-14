@@ -1,0 +1,103 @@
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <a href="{% url 'dashboard' %}" class="brand">
+            <img src="{% static 'img/logo.png' %}" alt="Nemy POS">
+            <span>Nemy POS</span>
+        </a>
+    </div>
+
+    <div class="sidebar-content">
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <ul class="nav-items">
+                    <li class="nav-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <a href="{% url 'dashboard' %}">
+                            <i class="ri-dashboard-line"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item {% if 'pos' in request.path %}active{% endif %}">
+                        <a href="{% url 'pos' %}">
+                            <i class="ri-shopping-cart-line"></i>
+                            <span>Point of Sale</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <h6 class="nav-section-title">Sales & Customers</h6>
+                <ul class="nav-items">
+                    <li class="nav-item {% if 'sales' in request.path %}active{% endif %}">
+                        <a href="{% url 'sales' %}">
+                            <i class="ri-money-dollar-circle-line"></i>
+                            <span>Sales</span>
+                        </a>
+                    </li>
+                    <li class="nav-item {% if 'quotations' in request.path %}active{% endif %}">
+                        <a href="{% url 'quotations' %}">
+                            <i class="ri-file-list-3-line"></i>
+                            <span>Quotations</span>
+                        </a>
+                    </li>
+                    <li class="nav-item {% if 'customers' in request.path %}active{% endif %}">
+                        <a href="{% url 'customers' %}">
+                            <i class="ri-user-line"></i>
+                            <span>Customers</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <h6 class="nav-section-title">Inventory</h6>
+                <ul class="nav-items">
+                    <li class="nav-item {% if 'products' in request.path %}active{% endif %}">
+                        <a href="{% url 'products' %}">
+                            <i class="ri-price-tag-3-line"></i>
+                            <span>Products</span>
+                        </a>
+                    </li>
+                    <li class="nav-item {% if 'categories' in request.path %}active{% endif %}">
+                        <a href="{% url 'categories' %}">
+                            <i class="ri-folder-line"></i>
+                            <span>Categories</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <h6 class="nav-section-title">Reports</h6>
+                <ul class="nav-items">
+                    <li class="nav-item {% if 'sales-report' in request.path %}active{% endif %}">
+                        <a href="{% url 'sales_report' %}">
+                            <i class="ri-line-chart-line"></i>
+                            <span>Sales Report</span>
+                        </a>
+                    </li>
+                    <li class="nav-item {% if 'inventory-report' in request.path %}active{% endif %}">
+                        <a href="{% url 'inventory_report' %}">
+                            <i class="ri-stock-line"></i>
+                            <span>Inventory Report</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            {% if request.user.is_staff %}
+            <div class="nav-section">
+                <h6 class="nav-section-title">Administration</h6>
+                <ul class="nav-items">
+                    <li class="nav-item {% if 'settings' in request.path %}active{% endif %}">
+                        <a href="{% url 'settings' %}">
+                            <i class="ri-settings-3-line"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+        </nav>
+    </div>
+</aside>

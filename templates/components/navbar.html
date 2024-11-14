@@ -1,0 +1,111 @@
+<nav class="navbar">
+    <div class="navbar-start">
+        <button class="sidebar-toggle" onclick="toggleSidebar()">
+            <i class="ri-menu-line"></i>
+        </button>
+        <div class="search-box d-none d-md-flex">
+            <i class="ri-search-line"></i>
+            <input type="text" placeholder="Search..." id="globalSearch">
+        </div>
+    </div>
+
+    <div class="navbar-end">
+        <!-- Notifications -->
+        <div class="dropdown">
+            <button class="nav-link" data-bs-toggle="dropdown">
+                <i class="ri-notification-3-line"></i>
+                {% if unread_notifications_count > 0 %}
+                <span class="badge">{{ unread_notifications_count }}</span>
+                {% endif %}
+            </button>
+            <div class="dropdown-menu dropdown-menu-end notifications-dropdown">
+                <div class="notifications-header">
+                    <h6>Notifications</h6>
+                    {% if notifications %}
+                    <button class="btn btn-link btn-sm" onclick="markAllAsRead()">
+                        Mark all as read
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="notifications-body">
+                    {% if notifications %}
+                        {% for notification in notifications %}
+                        <a href="{{ notification.url }}" class="notification-item {% if not notification.read %}unread{% endif %}">
+                            <div class="notification-icon bg-{{ notification.type }}">
+                                <i class="{{ notification.icon }}"></i>
+                            </div>
+                            <div class="notification-content">
+                                <p>{{ notification.message }}</p>
+                                <small>{{ notification.created_at|timesince }} ago</small>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-notifications">
+                            <i class="ri-notification-off-line"></i>
+                            <p>No notifications</p>
+                        </div>
+                    {% endif %}
+                </div>
+                {% if notifications %}
+                <div class="notifications-footer">
+                    <a href="{% url 'notifications' %}">View all notifications</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="dropdown">
+            <button class="nav-link" data-bs-toggle="dropdown">
+                <i class="ri-add-line"></i>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end">
+                <a class="dropdown-item" href="{% url 'pos' %}">
+                    <i class="ri-shopping-cart-line"></i> New Sale
+                </a>
+                <a class="dropdown-item" href="{% url 'add_product' %}">
+                    <i class="ri-price-tag-3-line"></i> Add Product
+                </a>
+                <a class="dropdown-item" href="{% url 'add_customer' %}">
+                    <i class="ri-user-add-line"></i> Add Customer
+                </a>
+                <a class="dropdown-item" href="{% url 'create_quotation' %}">
+                    <i class="ri-file-list-3-line"></i> Create Quotation
+                </a>
+            </div>
+        </div>
+
+        <!-- User Menu -->
+        <div class="dropdown">
+            <button class="nav-link profile-link" data-bs-toggle="dropdown">
+                {% if request.user.avatar %}
+                <img src="{{ request.user.avatar.url }}" alt="{{ request.user.get_full_name }}">
+                {% else %}
+                <div class="avatar-placeholder">
+                    {{ request.user.get_full_name|make_list|first|upper }}
+                </div>
+                {% endif %}
+                <span class="d-none d-md-inline">{{ request.user.get_full_name }}</span>
+            </button>
+            <div class="dropdown-menu dropdown-menu-end">
+                <div class="dropdown-header">
+                    <div class="user-info">
+                        <h6>{{ request.user.get_full_name }}</h6>
+                        <p>{{ request.user.role }}</p>
+                    </div>
+                </div>
+                <a class="dropdown-item" href="{% url 'profile' %}">
+                    <i class="ri-user-line"></i> My Profile
+                </a>
+                <a class="dropdown-item" href="{% url 'settings' %}">
+                    <i class="ri-settings-3-line"></i> Settings
+                </a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                    <i class="ri-logout-box-line"></i> Logout
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>

@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Products - Nemy POS{% endblock %}
+
+{% block content %}
+<div class="products-wrapper">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="page-title">Products</h1>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                    <i class="ri-add-line"></i> Add Product
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="search-box">
+                        <i class="ri-search-line"></i>
+                        <input type="text" class="form-control" id="productSearch" 
+                               placeholder="Search products...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="categoryFilter">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="stockFilter">
+                        <option value="">All Stock Status</option>
+                        <option value="in_stock">In Stock</option>
+                        <option value="low_stock">Low Stock</option>
+                        <option value="out_of_stock">Out of Stock</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-primary w-100" id="exportProducts">
+                        <i class="ri-download-line"></i> Export
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>SKU</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>
+                                <div class="product-cell">
+                                    <img src="{{ product.image.url|default:'static/img/default-product.png' }}" 
+                                         alt="{{ product.name }}" class="product-img">
+                                    <div>
+                                        <h6 class="product-name">{{ product.name }}</h6>
+                                        <small class="text-muted">ID: #{{ product.id }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ product.category.name }}</td>
+                            <td>{{ product.sku }}</td>
+                            <td>₦{{ product.price }}</td>
+                            <td>
+                                <div class="stock-info">
+                                    <span class="stock-quantity">{{ product.stock }}</span>
+                                    {% if product.stock <= product.reorder_point %}
+                                    <span class="badge bg-warning">Low Stock</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ product.status_color }}">
+                                    {{ product.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">
+                                        <i class="ri-more-2-fill"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="#" 
+                                               onclick="editProduct('{{ product.id }}')">
+                                                <i class="ri-pencil-line"></i> Edit
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#"
+                                               onclick="adjustStock('{{ product.id }}')">
+                                                <i class="ri-stack-line"></i> Adjust Stock
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#"
+                                               onclick="viewHistory('{{ product.id }}')">
+                                                <i class="ri-history-line"></i> View History
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="#"
+                                               onclick="deleteProduct('{{ product.id }}')">
+                                                <i class="ri-delete-bin-line"></i> Delete
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% include 'components/pagination.html' %}
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Product Modal -->
+{% include 'inventory/modals/product_form.html' %}
+
+<!-- Stock Adjustment Modal -->
+{% include 'inventory/modals/stock_adjustment.html' %}
+
+<!-- Product History Modal -->
+{% include 'inventory/modals/product_history.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/inventory/products.js' %}"></script>
+{% endblock %}

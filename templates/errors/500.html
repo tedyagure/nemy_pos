@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Server Error - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="container text-center py-5">
+        <div class="error-content">
+            <h1 class="display-1">500</h1>
+            <h2 class="mb-4">Server Error</h2>
+            <p class="lead mb-4">Something went wrong on our end. Please try again later.</p>
+            <img src="{% static 'img/500.svg' %}" alt="500 illustration" class="img-fluid mb-4" style="max-width: 400px;">
+            <div>
+                <a href="{% url 'landing' %}" class="btn btn-primary me-2">
+                    <i class="ri-home-line"></i> Go Home
+                </a>
+                <button onclick="location.reload()" class="btn btn-outline-primary">
+                    <i class="ri-refresh-line"></i> Try Again
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

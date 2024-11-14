@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inventory Management - Nemy POS{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/inventory.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="inventory-wrapper">
+    <!-- Inventory Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="page-title">Inventory Management</h1>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                    <i class="ri-add-line"></i> Add Product
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-lg-6">
+            <div class="card inventory-stat-card">
+                <div class="card-body">
+                    <div class="stat-icon bg-primary-subtle">
+                        <i class="ri-stack-line"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3>{{ total_products }}</h3>
+                        <p>Total Products</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Add more stat cards -->
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="inventory-filters mb-4">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" id="searchProduct" 
+                               placeholder="Search products...">
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" id="categoryFilter">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}">{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" id="stockFilter">
+                            <option value="">Stock Status</option>
+                            <option value="in_stock">In Stock</option>
+                            <option value="low_stock">Low Stock</option>
+                            <option value="out_of_stock">Out of Stock</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover inventory-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Stock</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>
+                                <div class="product-cell">
+                                    <img src="{{ product.image.url|default:'static/img/default-product.png' }}" 
+                                         alt="{{ product.name }}" class="product-img">
+                                    <div>
+                                        <h6 class="product-name">{{ product.name }}</h6>
+                                        <span class="product-sku">SKU: {{ product.sku }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ product.category.name }}</td>
+                            <td>
+                                <div class="stock-cell">
+                                    <span class="stock-number">{{ product.stock }}</span>
+                                    {% if product.is_low_stock %}
+                                    <span class="badge bg-warning">Low Stock</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>₦{{ product.price }}</td>
+                            <td>
+                                <span class="badge bg-{{ product.status_color }}">
+                                    {{ product.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-sm btn-light" 
+                                            data-action="edit"
+                                            data-item-id="{{ product.id }}"
+                                            data-product-name="{{ product.name|escapejs }}">
+                                        <i class="ri-pencil-line"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-light" 
+                                            data-action="adjust"
+                                            data-item-id="{{ product.id }}"
+                                            data-product-name="{{ product.name|escapejs }}">
+                                        <i class="ri-stack-line"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-light text-danger" 
+                                            data-action="delete"
+                                            data-item-id="{{ product.id }}"
+                                            data-product-name="{{ product.name|escapejs }}">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% include 'components/pagination.html' %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Product Modal -->
+{% include 'inventory/modals/add_product.html' %}
+
+<!-- Edit Product Modal -->
+{% include 'inventory/modals/edit_product.html' %}
+
+<!-- Adjust Stock Modal -->
+{% include 'inventory/modals/adjust_stock.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle inventory actions
+    document.querySelectorAll('.inventory-action').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const action = this.dataset.action;
+            const itemId = this.dataset.itemId;
+            const productName = this.dataset.productName;
+
+            switch(action) {
+                case 'adjust':
+                    adjustStock(itemId, productName);
+                    break;
+                case 'reorder':
+                    setReorderLevel(itemId, productName);
+                    break;
+                case 'history':
+                    viewHistory(itemId, productName);
+                    break;
+            }
+        });
+    });
+
+    // Initialize tooltips
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(tooltip => new bootstrap.Tooltip(tooltip));
+});
+
+// Function to adjust stock
+function adjustStock(itemId, productName) {
+    const quantity = prompt(`Enter quantity adjustment for ${productName}\nPositive for addition, negative for reduction:`);
+    if (quantity === null) return;
+    
+    const numQuantity = parseInt(quantity);
+    if (isNaN(numQuantity)) {
+        showNotification('Please enter a valid number', 'error');
+        return;
+    }
+
+    fetch('/api/inventory/adjust/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            item_id: itemId,
+            quantity: numQuantity
+        })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to adjust stock');
+        return response.json();
+    })
+    .then(data => {
+        showNotification('Stock adjusted successfully', 'success');
+        setTimeout(() => window.location.reload(), 1500);
+    })
+    .catch(error => {
+        showNotification('Error adjusting stock: ' + error.message, 'error');
+    });
+}
+
+// Function to set reorder level
+function setReorderLevel(itemId, productName) {
+    const level = prompt(`Enter new reorder level for ${productName}:`);
+    if (level === null) return;
+    
+    const numLevel = parseInt(level);
+    if (isNaN(numLevel) || numLevel < 0) {
+        showNotification('Please enter a valid positive number', 'error');
+        return;
+    }
+
+    fetch('/api/inventory/reorder-level/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            item_id: itemId,
+            level: numLevel
+        })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Failed to set reorder level');
+        return response.json();
+    })
+    .then(data => {
+        showNotification('Reorder level updated successfully', 'success');
+        setTimeout(() => window.location.reload(), 1500);
+    })
+    .catch(error => {
+        showNotification('Error updating reorder level: ' + error.message, 'error');
+    });
+}
+
+// Function to view history
+function viewHistory(itemId, productName) {
+    window.location.href = `/inventory/${itemId}/history/`;
+}
+
+// Helper function to show notifications
+function showNotification(message, type = 'info') {
+    // Implementation depends on your notification system
+    console.log(`${type}: ${message}`);
+}
+</script>
+{% endblock %}

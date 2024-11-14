@@ -1,0 +1,287 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Quotation #{{ quotation.reference }} - Nemy POS{% endblock %}
+
+{% block content %}
+<div class="quotation-details-wrapper">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="page-title">Quotation #{{ quotation.reference }}</h1>
+                <span class="badge bg-{{ quotation.status_color }}">{{ quotation.status }}</span>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-outline-primary" 
+                        onclick="downloadPDF('{{ quotation.id }}'); return false;">
+                    <i class="ri-download-line"></i> Download PDF
+                </button>
+                <button class="btn btn-outline-primary" 
+                        onclick="sendQuotation('{{ quotation.id }}'); return false;">
+                    <i class="ri-mail-line"></i> Send to Customer
+                </button>
+                {% if quotation.status == 'draft' %}
+                <button class="btn btn-primary" 
+                        onclick="editQuotation('{{ quotation.id }}'); return false;">
+                    <i class="ri-pencil-line"></i> Edit
+                </button>
+                {% endif %}
+                {% if quotation.status == 'accepted' %}
+                <button class="btn btn-success" 
+                        onclick="convertToSale('{{ quotation.id }}'); return false;">
+                    <i class="ri-exchange-line"></i> Convert to Sale
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Quotation Information -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <div class="quotation-header">
+                        <div class="company-info">
+                            <img src="{{ business.logo.url }}" alt="{{ business.name }}" class="company-logo">
+                            <div>
+                                <h3>{{ business.name }}</h3>
+                                <p>{{ business.address }}</p>
+                                <p>Tel: {{ business.phone }}</p>
+                                <p>Email: {{ business.email }}</p>
+                            </div>
+                        </div>
+                        <div class="quotation-meta">
+                            <div class="meta-item">
+                                <label>Quotation Date:</label>
+                                <span>{{ quotation.created_at|date:"F j, Y" }}</span>
+                            </div>
+                            <div class="meta-item">
+                                <label>Valid Until:</label>
+                                <span>{{ quotation.valid_until|date:"F j, Y" }}</span>
+                            </div>
+                            <div class="meta-item">
+                                <label>Reference:</label>
+                                <span>#{{ quotation.reference }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Items Table -->
+                    <div class="table-responsive mt-4">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Item Description</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in quotation.items.all %}
+                                <tr>
+                                    <td>
+                                        <div class="item-description">
+                                            <h6>{{ item.product.name }}</h6>
+                                            {% if item.description %}
+                                            <small class="text-muted">{{ item.description }}</small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>₦{{ item.price }}</td>
+                                    <td class="text-end">₦{{ item.total }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end">Subtotal:</td>
+                                    <td class="text-end">₦{{ quotation.subtotal }}</td>
+                                </tr>
+                                {% if quotation.discount %}
+                                <tr>
+                                    <td colspan="3" class="text-end">
+                                        Discount ({{ quotation.discount }}%):
+                                    </td>
+                                    <td class="text-end">-₦{{ quotation.discount_amount }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td colspan="3" class="text-end">Tax (7.5%):</td>
+                                    <td class="text-end">₦{{ quotation.tax }}</td>
+                                </tr>
+                                <tr class="fw-bold">
+                                    <td colspan="3" class="text-end">Total:</td>
+                                    <td class="text-end">₦{{ quotation.total }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    {% if quotation.terms %}
+                    <div class="terms-section mt-4">
+                        <h6>Terms and Conditions</h6>
+                        <p>{{ quotation.terms }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if quotation.notes %}
+                    <div class="notes-section mt-4">
+                        <h6>Notes</h6>
+                        <p>{{ quotation.notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Information and Activity -->
+        <div class="col-lg-4">
+            <!-- Customer Information -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Customer Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="customer-info">
+                        <div class="customer-avatar">
+                            {% if quotation.customer.avatar %}
+                            <img src="{{ quotation.customer.avatar.url }}" 
+                                 alt="{{ quotation.customer.name }}">
+                            {% else %}
+                            <div class="avatar-placeholder">
+                                {{ quotation.customer.name|make_list|first|upper }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <h6>{{ quotation.customer.name }}</h6>
+                        <div class="customer-details">
+                            <div class="detail-item">
+                                <i class="ri-phone-line"></i>
+                                <span>{{ quotation.customer.phone }}</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="ri-mail-line"></i>
+                                <span>{{ quotation.customer.email }}</span>
+                            </div>
+                            {% if quotation.customer.address %}
+                            <div class="detail-item">
+                                <i class="ri-map-pin-line"></i>
+                                <span>{{ quotation.customer.address }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Timeline -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title">Activity Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% for activity in quotation.activities.all %}
+                        <div class="timeline-item">
+                            <div class="timeline-icon bg-{{ activity.type_color }}">
+                                <i class="{{ activity.type_icon }}"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <p>{{ activity.description }}</p>
+                                <small class="text-muted">
+                                    {{ activity.created_at|date:"M d, Y H:i" }}
+                                </small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Send Quotation Modal -->
+{% include 'quotations/modals/send_quotation.html' %}
+
+<!-- Convert to Sale Modal -->
+{% include 'quotations/modals/convert_to_sale.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/quotations/details.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(tooltip => new bootstrap.Tooltip(tooltip));
+
+    // Initialize modals
+    window.sendModal = new bootstrap.Modal(document.getElementById('sendQuotationModal'));
+    window.convertModal = new bootstrap.Modal(document.getElementById('convertToSaleModal'));
+});
+
+// Function to download PDF
+function downloadPDF(quotationId) {
+    window.open(`/quotations/${quotationId}/pdf/`, '_blank');
+}
+
+// Function to send quotation
+async function sendQuotation(quotationId) {
+    try {
+        const response = await fetch(`/api/quotations/${quotationId}/send/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to send quotation');
+        
+        showNotification('Quotation sent successfully', 'success');
+        setTimeout(() => window.location.reload(), 1500);
+    } catch (error) {
+        showNotification('Error sending quotation: ' + error.message, 'error');
+    }
+}
+
+// Function to edit quotation
+function editQuotation(quotationId) {
+    window.location.href = `/quotations/${quotationId}/edit/`;
+}
+
+// Function to convert to sale
+async function convertToSale(quotationId) {
+    try {
+        const form = document.getElementById('convertToSaleForm');
+        const formData = new FormData(form);
+        
+        const response = await fetch(`/api/quotations/${quotationId}/convert/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to convert quotation');
+
+        const data = await response.json();
+        showNotification('Quotation converted to sale successfully', 'success');
+        window.location.href = `/sales/${data.sale_id}/`;
+    } catch (error) {
+        showNotification('Error converting quotation: ' + error.message, 'error');
+    }
+}
+
+// Helper function to show notifications
+function showNotification(message, type = 'info') {
+    // Implementation depends on your notification system
+    console.log(`${type}: ${message}`);
+}
+</script>
+{% endblock %} 

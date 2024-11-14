@@ -1,0 +1,42 @@
+/* Landing Page Styles */
+.landing-page .hero {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+}
+
+.feature-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.feature-icon i {
+    font-size: 32px;
+    color: #4e73df;
+}
+
+/* Error Pages Styles */
+.error-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    background: #f8f9fa;
+}
+
+.error-content {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.error-page h1 {
+    color: #4e73df;
+    font-weight: bold;
+}
+
+.error-page img {
+    max-width: 100%;
+    height: auto;
+} 

@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Quotations - Nemy POS{% endblock %}
+
+{% block content %}
+<div class="quotations-wrapper">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="page-title">Quotations</h1>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary" onclick="createQuotation()">
+                    <i class="ri-add-line"></i> Create Quotation
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="search-box">
+                        <i class="ri-search-line"></i>
+                        <input type="text" class="form-control" id="quotationSearch" 
+                               placeholder="Search quotations...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="draft">Draft</option>
+                        <option value="sent">Sent</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="expired">Expired</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="dateFilter">
+                        <option value="">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="yesterday">Yesterday</option>
+                        <option value="last7days">Last 7 Days</option>
+                        <option value="thisMonth">This Month</option>
+                        <option value="custom">Custom Range</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quotations Table -->
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Quotation #</th>
+                            <th>Customer</th>
+                            <th>Date</th>
+                            <th>Valid Until</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for quotation in quotations %}
+                        <tr>
+                            <td>
+                                <a href="{% url 'quotation_details' quotation.id %}">#{{ quotation.reference }}</a>
+                            </td>
+                            <td>{{ quotation.created_at|date:"M d, Y" }}</td>
+                            <td>{{ quotation.valid_until|date:"M d, Y" }}</td>
+                            <td>
+                                <div class="customer-cell">
+                                    {% if quotation.customer.avatar %}
+                                    <img src="{{ quotation.customer.avatar.url }}" alt="{{ quotation.customer.name }}">
+                                    {% else %}
+                                    <div class="avatar-placeholder">
+                                        {{ quotation.customer.name|make_list|first|upper }}
+                                    </div>
+                                    {% endif %}
+                                    <span>{{ quotation.customer.name }}</span>
+                                </div>
+                            </td>
+                            <td>₦{{ quotation.total|floatformat:2 }}</td>
+                            <td>
+                                <span class="badge bg-{{ quotation.status_color }}">{{ quotation.status }}</span>
+                            </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">
+                                        <i class="ri-more-2-fill"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li>
+                                            <a class="dropdown-item" 
+                                               href="{% url 'quotation_details' quotation.id %}">
+                                                <i class="ri-eye-line"></i> View Details
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#" 
+                                               onclick="editQuotation('{{ quotation.id }}'); return false;">
+                                                <i class="ri-pencil-line"></i> Edit
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#" 
+                                               onclick="sendQuotation('{{ quotation.id }}'); return false;">
+                                                <i class="ri-mail-line"></i> Send to Customer
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#" 
+                                               onclick="downloadPDF('{{ quotation.id }}'); return false;">
+                                                <i class="ri-download-line"></i> Download PDF
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="#" 
+                                               onclick="deleteQuotation('{{ quotation.id }}'); return false;">
+                                                <i class="ri-delete-bin-line"></i> Delete
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% include 'components/pagination.html' %}
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Quotation Modal -->
+{% include 'quotations/modals/quotation_form.html' %}
+
+<!-- Send Quotation Modal -->
+{% include 'quotations/modals/send_quotation.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/quotations/index.js' %}"></script>
+<script>
+// Initialize tooltips and other components
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(tooltip => new bootstrap.Tooltip(tooltip));
+});
+
+// Function to edit quotation
+function editQuotation(quotationId) {
+    window.location.href = `/quotations/${quotationId}/edit/`;
+}
+
+// Function to send quotation
+async function sendQuotation(quotationId) {
+    try {
+        const response = await fetch(`/api/quotations/${quotationId}/send/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to send quotation');
+        
+        showNotification('Quotation sent successfully', 'success');
+        setTimeout(() => window.location.reload(), 1500);
+    } catch (error) {
+        showNotification('Error sending quotation: ' + error.message, 'error');
+    }
+}
+
+// Function to download PDF
+function downloadPDF(quotationId) {
+    window.open(`/quotations/${quotationId}/pdf/`, '_blank');
+}
+
+// Function to delete quotation
+async function deleteQuotation(quotationId) {
+    if (!confirm('Are you sure you want to delete this quotation?')) return;
+
+    try {
+        const response = await fetch(`/api/quotations/${quotationId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to delete quotation');
+        
+        showNotification('Quotation deleted successfully', 'success');
+        setTimeout(() => window.location.reload(), 1500);
+    } catch (error) {
+        showNotification('Error deleting quotation: ' + error.message, 'error');
+    }
+}
+
+// Helper function to show notifications
+function showNotification(message, type = 'info') {
+    // Implementation depends on your notification system
+    console.log(`${type}: ${message}`);
+}
+</script>
+{% endblock %} 

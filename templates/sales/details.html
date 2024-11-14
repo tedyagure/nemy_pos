@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sale Details - Nemy POS{% endblock %}
+
+{% block content %}
+<div class="sale-details-wrapper">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="page-title">Sale #{{ sale.reference }}</h1>
+                <span class="badge bg-{{ sale.status_color }}">{{ sale.status }}</span>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-outline-primary" 
+                        onclick="printReceipt('{{ sale.id }}')">
+                    <i class="ri-printer-line"></i> Print Receipt
+                </button>
+                <button class="btn btn-outline-primary" 
+                        onclick="emailReceipt('{{ sale.id }}')">
+                    <i class="ri-mail-line"></i> Email Receipt
+                </button>
+                {% if sale.status != 'refunded' %}
+                <button class="btn btn-danger" 
+                        onclick="initializeRefund('{{ sale.id }}')">
+                    <i class="ri-refund-2-line"></i> Refund
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sale Information -->
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Sale Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="sale-info-grid">
+                        <div class="info-item">
+                            <label>Date & Time</label>
+                            <p>{{ sale.created_at|date:"F j, Y H:i" }}</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Status</label>
+                            <span class="badge bg-{{ sale.status_color }}">{{ sale.status }}</span>
+                        </div>
+                        <div class="info-item">
+                            <label>Cashier</label>
+                            <p>{{ sale.cashier.name }}</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Payment Method</label>
+                            <p>{{ sale.payment_method }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Items Table -->
+                    <div class="table-responsive mt-4">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in sale.items.all %}
+                                <tr>
+                                    <td>
+                                        <div class="product-cell">
+                                            <img src="{{ item.product.image.url|default:'static/img/default-product.png' }}" 
+                                                 alt="{{ item.product.name }}">
+                                            <div>
+                                                <h6>{{ item.product.name }}</h6>
+                                                <small class="text-muted">SKU: {{ item.product.sku }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>₦{{ item.price }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td class="text-end">₦{{ item.total }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-end">Subtotal:</td>
+                                    <td class="text-end">₦{{ sale.subtotal }}</td>
+                                </tr>
+                                {% if sale.discount %}
+                                <tr>
+                                    <td colspan="3" class="text-end">Discount ({{ sale.discount }}%):</td>
+                                    <td class="text-end">-₦{{ sale.discount_amount }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td colspan="3" class="text-end">Tax (7.5%):</td>
+                                    <td class="text-end">₦{{ sale.tax }}</td>
+                                </tr>
+                                <tr class="fw-bold">
+                                    <td colspan="3" class="text-end">Total:</td>
+                                    <td class="text-end">₦{{ sale.total }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Information -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Customer Information</h5>
+                </div>
+                <div class="card-body">
+                    {% if sale.customer %}
+                    <div class="customer-info">
+                        <div class="customer-avatar">
+                            {% if sale.customer.avatar %}
+                            <img src="{{ sale.customer.avatar.url }}" alt="{{ sale.customer.name }}">
+                            {% else %}
+                            <div class="avatar-placeholder">
+                                {{ sale.customer.name|make_list|first|upper }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <h6>{{ sale.customer.name }}</h6>
+                        <p class="text-muted">Customer ID: #{{ sale.customer.id }}</p>
+                        
+                        <div class="customer-details mt-4">
+                            <div class="detail-item">
+                                <i class="ri-phone-line"></i>
+                                <span>{{ sale.customer.phone }}</span>
+                            </div>
+                            {% if sale.customer.email %}
+                            <div class="detail-item">
+                                <i class="ri-mail-line"></i>
+                                <span>{{ sale.customer.email }}</span>
+                            </div>
+                            {% endif %}
+                            {% if sale.customer.address %}
+                            <div class="detail-item">
+                                <i class="ri-map-pin-line"></i>
+                                <span>{{ sale.customer.address }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted">
+                        <i class="ri-user-line" style="font-size: 2rem;"></i>
+                        <p>Walk-in Customer</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if sale.status == 'refunded' %}
+            <!-- Refund Information -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title">Refund Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="refund-info">
+                        <div class="info-item">
+                            <label>Refund Date</label>
+                            <p>{{ sale.refund.created_at|date:"F j, Y H:i" }}</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Refund Amount</label>
+                            <p>₦{{ sale.refund.amount }}</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Reason</label>
+                            <p>{{ sale.refund.reason }}</p>
+                        </div>
+                        <div class="info-item">
+                            <label>Processed By</label>
+                            <p>{{ sale.refund.processed_by.name }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Refund Modal -->
+<div class="modal fade" id="refundModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Process Refund</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="refundForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="sale_id" value="{{ sale.id }}">
+                    <div class="mb-3">
+                        <label class="form-label">Refund Amount</label>
+                        <input type="number" class="form-control" name="amount" 
+                               max="{{ sale.total }}" value="{{ sale.total }}" step="0.01">
+                        <small class="text-muted">Maximum amount: ₦{{ sale.total }}</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason for Refund</label>
+                        <textarea class="form-control" name="reason" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" 
+                        onclick="processRefund('{{ sale.id }}')">
+                    Process Refund
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/sales/details.js' %}"></script>
+<script>
+// Initialize components
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(tooltip => new bootstrap.Tooltip(tooltip));
+
+    // Initialize refund modal
+    window.refundModal = new bootstrap.Modal(document.getElementById('refundModal'));
+});
+
+// Function to print receipt
+function printReceipt(saleId) {
+    window.open(`/sales/${saleId}/receipt/`, '_blank');
+}
+
+// Function to email receipt
+async function emailReceipt(saleId) {
+    try {
+        const response = await fetch(`/api/sales/${saleId}/email-receipt/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to send email');
+        
+        showNotification('Receipt sent successfully', 'success');
+    } catch (error) {
+        showNotification('Error sending receipt: ' + error.message, 'error');
+    }
+}
+
+// Function to initialize refund
+function initializeRefund(saleId) {
+    document.getElementById('refundForm').reset();
+    window.refundModal.show();
+}
+
+// Function to process refund
+async function processRefund(saleId) {
+    const form = document.getElementById('refundForm');
+    const formData = new FormData(form);
+
+    try {
+        const response = await fetch(`/api/sales/${saleId}/refund/`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+
+        if (!response.ok) throw new Error('Failed to process refund');
+
+        window.refundModal.hide();
+        showNotification('Refund processed successfully', 'success');
+        // Reload page to show updated status
+        window.location.reload();
+    } catch (error) {
+        showNotification('Error processing refund: ' + error.message, 'error');
+    }
+}
+
+// Helper function to show notifications
+function showNotification(message, type = 'info') {
+    // Implementation depends on your notification system
+    console.log(`${type}: ${message}`);
+}
+</script>
+{% endblock %}

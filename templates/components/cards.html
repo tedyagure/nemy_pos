@@ -1,0 +1,65 @@
+{% comment %}
+This file contains reusable card components that can be included in other templates
+{% endcomment %}
+
+{% comment %} Stats Card {% endcomment %}
+{% macro stats_card(title, value, icon, color, trend=None, trend_value=None) %}
+<div class="stat-card">
+    <div class="stat-icon" data-color="{{ color }}">
+        <i class="{{ icon }}"></i>
+    </div>
+    <div class="stat-info">
+        <h3>{{ value }}</h3>
+        <p>{{ title }}</p>
+        {% if trend %}
+        <div class="trend-indicator {% if trend == 'up' %}up{% else %}down{% endif %}">
+            <i class="ri-arrow-{{ trend }}-line"></i>
+            <span>{{ trend_value }}</span>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
+
+{% comment %} Chart Card {% endcomment %}
+{% macro chart_card(title, chart_id, actions=True) %}
+<div class="chart-card">
+    <div class="chart-header">
+        <h5 class="chart-title">{{ title }}</h5>
+        {% if actions %}
+        <div class="chart-actions">
+            <div class="btn-group">
+                <button class="btn btn-outline-primary btn-sm active" data-period="week">Week</button>
+                <button class="btn btn-outline-primary btn-sm" data-period="month">Month</button>
+                <button class="btn btn-outline-primary btn-sm" data-period="year">Year</button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    <div class="chart-body">
+        <canvas id="{{ chart_id }}" height="300"></canvas>
+    </div>
+</div>
+{% endmacro %}
+
+{% comment %} Info Card {% endcomment %}
+{% macro info_card(title, content, footer=None, actions=None) %}
+<div class="info-card">
+    <div class="info-card-header">
+        <h5 class="info-card-title">{{ title }}</h5>
+        {% if actions %}
+        <div class="info-card-actions">
+            {{ actions }}
+        </div>
+        {% endif %}
+    </div>
+    <div class="info-card-body">
+        {{ content }}
+    </div>
+    {% if footer %}
+    <div class="info-card-footer">
+        {{ footer }}
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}

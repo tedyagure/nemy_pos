@@ -1,0 +1,82 @@
+{% comment %}
+This file contains reusable modal components that can be included in other templates
+{% endcomment %}
+
+{% comment %} Confirmation Modal {% endcomment %}
+{% macro confirmation_modal(id, title, message, confirm_text="Confirm", cancel_text="Cancel", danger=False) %}
+<div class="modal fade" id="{{ id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>{{ message }}</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    {{ cancel_text }}
+                </button>
+                <button type="button" 
+                        class="btn btn-{% if danger %}danger{% else %}primary{% endif %}"
+                        onclick="confirmModal('{{ id }}')">
+                    {{ confirm_text }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% comment %} Form Modal {% endcomment %}
+{% macro form_modal(id, title, form_content, submit_text="Save") %}
+<div class="modal fade" id="{{ id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="{{ id }}Form">
+                    {% csrf_token %}
+                    {{ form_content }}
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="submitForm('{{ id }}')">
+                    {{ submit_text }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+
+{% comment %} Alert Modal {% endcomment %}
+{% macro alert_modal(id, title, message, type="info") %}
+<div class="modal fade" id="{{ id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-{{ type }}">
+                <h5 class="modal-title text-white">{{ title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-{{ type }} mb-0">
+                    {{ message }}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}

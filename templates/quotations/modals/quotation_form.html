@@ -1,0 +1,135 @@
+<div class="modal fade" id="quotationModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quotationModalTitle">Create Quotation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quotationForm">
+                    <!-- Customer Selection -->
+                    <div class="mb-4">
+                        <label class="form-label">Customer</label>
+                        <select class="form-select" name="customer" required>
+                            <option value="">Select Customer</option>
+                            {% for customer in customers %}
+                            <option value="{{ customer.id }}">{{ customer.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Items Section -->
+                    <div class="items-section mb-4">
+                        <label class="form-label">Items</label>
+                        <div id="itemsList">
+                            <!-- Items will be added here dynamically -->
+                        </div>
+                        <button type="button" class="btn btn-outline-primary btn-sm mt-2" 
+                                onclick="addItemRow()">
+                            <i class="ri-add-line"></i> Add Item
+                        </button>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Valid Until</label>
+                            <input type="date" class="form-control" name="valid_until" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Reference</label>
+                            <input type="text" class="form-control" name="reference" 
+                                   placeholder="Optional reference number">
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Terms and Conditions</label>
+                            <textarea class="form-control" name="terms" rows="3"></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Notes</label>
+                            <textarea class="form-control" name="notes" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="summary-section mt-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Discount (%)</label>
+                                <input type="number" class="form-control" name="discount" 
+                                       min="0" max="100" value="0">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="summary-totals">
+                                    <div class="total-row">
+                                        <span>Subtotal:</span>
+                                        <span id="subtotal">₦0.00</span>
+                                    </div>
+                                    <div class="total-row">
+                                        <span>Discount:</span>
+                                        <span id="discountAmount">-₦0.00</span>
+                                    </div>
+                                    <div class="total-row">
+                                        <span>Tax (7.5%):</span>
+                                        <span id="tax">₦0.00</span>
+                                    </div>
+                                    <div class="total-row grand-total">
+                                        <span>Total:</span>
+                                        <span id="total">₦0.00</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveQuotation('draft')">
+                    Save as Draft
+                </button>
+                <button type="button" class="btn btn-success" onclick="saveQuotation('send')">
+                    Save & Send
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Item Row Template (Hidden) -->
+<template id="itemRowTemplate">
+    <div class="item-row">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-4">
+                <select class="form-select product-select" name="products[]" required>
+                    <option value="">Select Product</option>
+                    {% for product in products %}
+                    <option value="{{ product.id }}" 
+                            data-price="{{ product.price }}">{{ product.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control quantity-input" 
+                       name="quantities[]" min="1" value="1" required>
+            </div>
+            <div class="col-md-2">
+                <input type="number" class="form-control price-input" 
+                       name="prices[]" step="0.01" required>
+            </div>
+            <div class="col-md-3">
+                <input type="text" class="form-control" name="descriptions[]" 
+                       placeholder="Description (optional)">
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn btn-outline-danger btn-sm" 
+                        onclick="removeItemRow(this)">
+                    <i class="ri-delete-bin-line"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</template> 

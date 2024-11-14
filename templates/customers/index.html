@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Customer Management - Nemy POS{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/customers.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="customers-wrapper">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h1 class="page-title">Customers</h1>
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary" data-bs-toggle="modal" 
+                        data-bs-target="#addCustomerModal">
+                    <i class="ri-user-add-line"></i> Add Customer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-lg-6">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="stat-icon bg-primary-subtle">
+                        <i class="ri-team-line"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3>{{ total_customers }}</h3>
+                        <p>Total Customers</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="stat-icon bg-success-subtle">
+                        <i class="ri-shopping-bag-line"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3>{{ total_sales }}</h3>
+                        <p>Total Sales</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="stat-icon bg-warning-subtle">
+                        <i class="ri-user-star-line"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3>{{ loyal_customers }}</h3>
+                        <p>Loyal Customers</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-lg-6">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="stat-icon bg-info-subtle">
+                        <i class="ri-calendar-line"></i>
+                    </div>
+                    <div class="stat-details">
+                        <h3>{{ new_customers_month }}</h3>
+                        <p>New This Month</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customers Table Card -->
+    <div class="card">
+        <div class="card-body">
+            <!-- Search and Filters -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="search-box">
+                        <i class="ri-search-line"></i>
+                        <input type="text" class="form-control" id="customerSearch" 
+                               placeholder="Search customers...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="customerStatus">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="customerSort">
+                        <option value="recent">Most Recent</option>
+                        <option value="name">Name</option>
+                        <option value="sales">Total Sales</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Customers Table -->
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Contact</th>
+                            <th>Total Sales</th>
+                            <th>Last Purchase</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in customers %}
+                        <tr>
+                            <td>
+                                <div class="customer-info">
+                                    <div class="customer-avatar">
+                                        {% if customer.avatar %}
+                                            <img src="{{ customer.avatar.url }}" alt="{{ customer.name }}">
+                                        {% else %}
+                                            <div class="avatar-placeholder">
+                                                {{ customer.name|make_list|first|upper }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h6 class="customer-name">{{ customer.name }}</h6>
+                                        <span class="customer-id">#{{ customer.id }}</span>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="contact-info">
+                                    <div><i class="ri-phone-line"></i> {{ customer.phone }}</div>
+                                    {% if customer.email %}
+                                    <div><i class="ri-mail-line"></i> {{ customer.email }}</div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="sales-info">
+                                    <div class="total-amount">₦{{ customer.total_sales }}</div>
+                                    <small class="text-muted">{{ customer.orders_count }} orders</small>
+                                </div>
+                            </td>
+                            <td>
+                                {% if customer.last_purchase %}
+                                <div class="last-purchase">
+                                    {{ customer.last_purchase|date:"M d, Y" }}
+                                    <small class="text-muted">{{ customer.last_purchase|time:"H:i" }}</small>
+                                </div>
+                                {% else %}
+                                <span class="text-muted">No purchases yet</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ customer.status_color }}">
+                                    {{ customer.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">
+                                        <i class="ri-more-2-fill"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'customer_detail' customer.id %}">
+                                                <i class="ri-eye-line"></i> View Details
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#" 
+                                               onclick="editCustomer('{{ customer.id }}')">
+                                                <i class="ri-pencil-line"></i> Edit
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="#"
+                                               onclick="sendMessage('{{ customer.id }}')">
+                                                <i class="ri-message-2-line"></i> Send Message
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item text-danger" href="#"
+                                               onclick="deleteCustomer('{{ customer.id }}')">
+                                                <i class="ri-delete-bin-line"></i> Delete
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% include 'components/pagination.html' %}
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Customer Modal -->
+<div class="modal fade" id="customerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Add Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="customerForm">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" class="form-control" name="phone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" name="email">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea class="form-control" name="address" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea class="form-control" name="notes" rows="2"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveCustomer()">
+                    Save Customer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Send Message Modal -->
+<div class="modal fade" id="messageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Send Message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="messageForm">
+                    <div class="mb-3">
+                        <label class="form-label">Message Type</label>
+                        <select class="form-select" name="messageType">
+                            <option value="sms">SMS</option>
+                            <option value="email">Email</option>
+                            <option value="whatsapp">WhatsApp</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Message</label>
+                        <textarea class="form-control" name="message" rows="4"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="sendCustomerMessage()">
+                    Send Message
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/customers.js' %}"></script>
+{% endblock %} 

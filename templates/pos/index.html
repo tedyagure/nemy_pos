@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Point of Sale - Nemy POS{% endblock %}
+
+{% block extra_css %}
+<link href="{% static 'css/pos.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="pos-wrapper">
+    <div class="pos-container">
+        <!-- Left Side - Products -->
+        <div class="pos-products">
+            <!-- Categories Bar -->
+            <div class="categories-bar">
+                <button class="category-btn active" data-category="all">
+                    All Items
+                </button>
+                {% for category in categories %}
+                <button class="category-btn" data-category="{{ category.id }}">
+                    {{ category.name }}
+                </button>
+                {% endfor %}
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="ri-search-line"></i>
+                    <input type="text" placeholder="Search products (Ctrl + /)" id="productSearch">
+                    <button class="btn-scan" data-bs-toggle="tooltip" title="Scan Barcode">
+                        <i class="ri-barcode-line"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="products-grid">
+                {% for product in products %}
+                <div class="product-card" data-id="{{ product.id }}" 
+                     data-category="{{ product.category_id }}">
+                    <div class="product-image">
+                        <img src="{{ product.image.url|default:'static/img/default-product.png' }}" 
+                             alt="{{ product.name }}">
+                        {% if product.stock <= 0 %}
+                        <div class="out-of-stock">Out of Stock</div>
+                        {% endif %}
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-name">{{ product.name }}</h3>
+                        <p class="product-price">₦{{ product.price }}</p>
+                        <small class="stock-info">In stock: {{ product.stock }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Right Side - Cart -->
+        <div class="pos-cart">
+            <!-- Cart Header -->
+            <div class="cart-header">
+                <h2>Current Sale</h2>
+                <div class="cart-actions">
+                    <button class="btn btn-outline-danger btn-sm" id="clearCart">
+                        <i class="ri-delete-bin-line"></i> Clear
+                    </button>
+                    <button class="btn btn-outline-primary btn-sm" id="holdSale">
+                        <i class="ri-pause-line"></i> Hold
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cart Items -->
+            <div class="cart-items" id="cartItems">
+                <!-- Cart items will be dynamically added here -->
+            </div>
+
+            <!-- Cart Summary -->
+            <div class="cart-summary">
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span class="subtotal">₦0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax (7.5%)</span>
+                    <span class="tax">₦0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Discount</span>
+                    <div class="discount-input">
+                        <input type="number" id="discountInput" min="0" max="100" value="0">
+                        <span>%</span>
+                    </div>
+                </div>
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <span class="total-amount">₦0.00</span>
+                </div>
+            </div>
+
+            <!-- Customer Info -->
+            <div class="customer-section">
+                <button class="btn btn-outline-primary w-100" data-bs-toggle="modal" 
+                        data-bs-target="#customerModal">
+                    <i class="ri-user-add-line"></i> Add Customer
+                </button>
+            </div>
+
+            <!-- Payment Actions -->
+            <div class="payment-actions">
+                <button class="btn btn-primary btn-lg w-100" id="checkoutBtn">
+                    <i class="ri-shopping-cart-line"></i> Checkout (₦0.00)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer Modal -->
+<div class="modal fade" id="customerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="customer-search mb-3">
+                    <input type="text" class="form-control" placeholder="Search customer...">
+                </div>
+                <div class="customer-list">
+                    <!-- Customer list will be dynamically populated -->
+                </div>
+                <div class="new-customer-form mt-3">
+                    <h6>Quick Add Customer</h6>
+                    <form id="quickAddCustomerForm">
+                        <div class="mb-3">
+                            <input type="text" class="form-control" placeholder="Name">
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" placeholder="Phone">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Add Customer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div class="modal fade" id="paymentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Complete Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-7">
+                        <div class="payment-methods">
+                            <h6>Payment Method</h6>
+                            <div class="payment-method-grid">
+                                <button class="payment-method-btn active" data-method="cash">
+                                    <i class="ri-money-dollar-box-line"></i>
+                                    <span>Cash</span>
+                                </button>
+                                <button class="payment-method-btn" data-method="card">
+                                    <i class="ri-bank-card-line"></i>
+                                    <span>Card</span>
+                                </button>
+                                <button class="payment-method-btn" data-method="transfer">
+                                    <i class="ri-exchange-line"></i>
+                                    <span>Transfer</span>
+                                </button>
+                                <button class="payment-method-btn" data-method="split">
+                                    <i class="ri-split-cells-horizontal"></i>
+                                    <span>Split</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="payment-details mt-4">
+                            <!-- Payment details will change based on selected method -->
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="payment-summary">
+                            <h6>Payment Summary</h6>
+                            <div class="summary-details">
+                                <!-- Summary details -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="completePayment">
+                    Complete Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/pos.js' %}"></script>
+{% endblock %}

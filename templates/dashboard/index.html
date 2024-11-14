@@ -1,0 +1,567 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Nemy POS{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Dashboard Styles */
+.dashboard-wrapper {
+    padding: 1.5rem;
+}
+
+/* Stats Cards */
+.stat-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    height: 100%;
+    transition: transform 0.3s ease;
+    border: 1px solid var(--border-color);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
+.stat-icon i {
+    font-size: 1.5rem;
+    color: white;
+}
+
+.stat-info h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-info p {
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.trend-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    font-size: 0.875rem;
+}
+
+.trend-indicator.up { color: var(--success); }
+.trend-indicator.down { color: var(--danger); }
+
+/* Charts */
+.chart-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    height: 100%;
+    border: 1px solid var(--border-color);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.chart-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.chart-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Recent Sales Table */
+.table-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.table-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.customer-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.customer-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.customer-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+}
+
+/* Top Products */
+.product-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.product-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    background: var(--light);
+}
+
+.product-image {
+    width: 48px;
+    height: 48px;
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+.product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.product-info {
+    flex: 1;
+}
+
+.product-info h6 {
+    margin: 0 0 0.25rem 0;
+}
+
+.product-info p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.product-sales {
+    text-align: right;
+}
+
+.product-sales h6 {
+    margin: 0 0 0.25rem 0;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .chart-card {
+        margin-bottom: 1.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+
+    .chart-header, .table-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .chart-actions {
+        width: 100%;
+    }
+
+    .chart-actions .btn {
+        flex: 1;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <!-- Stats Row -->
+    <div class="row g-4 mb-4">
+        <!-- Total Sales -->
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(var(--primary-rgb), 0.1)">
+                    <i class="ri-money-dollar-circle-line" style="color: var(--primary)"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>₦{{ total_sales|floatformat:2 }}</h3>
+                    <p>Total Sales</p>
+                    <div class="trend-indicator {% if sales_trend >= 0 %}up{% else %}down{% endif %}">
+                        <i class="ri-arrow-{% if sales_trend >= 0 %}up{% else %}down{% endif %}-line"></i>
+                        <span>{{ sales_trend|abs }}% vs last month</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Orders -->
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(var(--success-rgb), 0.1)">
+                    <i class="ri-shopping-cart-2-line" style="color: var(--success)"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>{{ total_orders }}</h3>
+                    <p>Total Orders</p>
+                    <div class="trend-indicator {% if orders_trend >= 0 %}up{% else %}down{% endif %}">
+                        <i class="ri-arrow-{% if orders_trend >= 0 %}up{% else %}down{% endif %}-line"></i>
+                        <span>{{ orders_trend|abs }}% vs last month</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Customers -->
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(var(--info-rgb), 0.1)">
+                    <i class="ri-user-line" style="color: var(--info)"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>{{ total_customers }}</h3>
+                    <p>Total Customers</p>
+                    <div class="trend-indicator {% if customers_trend >= 0 %}up{% else %}down{% endif %}">
+                        <i class="ri-arrow-{% if customers_trend >= 0 %}up{% else %}down{% endif %}-line"></i>
+                        <span>{{ customers_trend|abs }}% vs last month</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Average Order Value -->
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon" style="background: rgba(var(--warning-rgb), 0.1)">
+                    <i class="ri-bar-chart-line" style="color: var(--warning)"></i>
+                </div>
+                <div class="stat-info">
+                    <h3>₦{{ avg_order_value|floatformat:2 }}</h3>
+                    <p>Avg. Order Value</p>
+                    <div class="trend-indicator {% if aov_trend >= 0 %}up{% else %}down{% endif %}">
+                        <i class="ri-arrow-{% if aov_trend >= 0 %}up{% else %}down{% endif %}-line"></i>
+                        <span>{{ aov_trend|abs }}% vs last month</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <!-- Sales Chart -->
+        <div class="col-xl-8">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5 class="chart-title">Sales Overview</h5>
+                    <div class="chart-actions">
+                        <button class="btn btn-outline-primary btn-sm active" data-period="week">
+                            Week
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" data-period="month">
+                            Month
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" data-period="year">
+                            Year
+                        </button>
+                    </div>
+                </div>
+                <canvas id="salesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Top Categories -->
+        <div class="col-xl-4">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5 class="chart-title">Sales by Category</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary btn-sm dropdown-toggle" 
+                                data-bs-toggle="dropdown">
+                            This Month
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">This Week</a></li>
+                            <li><a class="dropdown-item" href="#">This Month</a></li>
+                            <li><a class="dropdown-item" href="#">This Year</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <canvas id="categoriesChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Sales and Top Products -->
+    <div class="row g-4">
+        <!-- Recent Sales -->
+        <div class="col-xl-8">
+            <div class="table-card">
+                <div class="table-header">
+                    <h5 class="table-title">Recent Sales</h5>
+                    <a href="{% url 'sales' %}" class="btn btn-outline-primary btn-sm">
+                        View All
+                    </a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Products</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sale in recent_sales %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'sale_details' sale.id %}">#{{ sale.id }}</a>
+                                </td>
+                                <td>
+                                    <div class="customer-cell">
+                                        {% if sale.customer %}
+                                            {% if sale.customer.avatar %}
+                                            <div class="customer-avatar">
+                                                <img src="{{ sale.customer.avatar.url }}" 
+                                                     alt="{{ sale.customer.name }}">
+                                            </div>
+                                            {% else %}
+                                            <div class="customer-avatar">
+                                                <div class="avatar-placeholder">
+                                                    {{ sale.customer.name|make_list|first|upper }}
+                                                </div>
+                                            </div>
+                                            {% endif %}
+                                            <span>{{ sale.customer.name }}</span>
+                                        {% else %}
+                                            <span>Walk-in Customer</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                <td>{{ sale.items.count }} items</td>
+                                <td>₦{{ sale.total|floatformat:2 }}</td>
+                                <td>
+                                    <span class="badge bg-{{ sale.status_color }}">
+                                        {{ sale.status }}
+                                    </span>
+                                </td>
+                                <td>{{ sale.created_at|date:"M d, Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Products -->
+        <div class="col-xl-4">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5 class="chart-title">Top Products</h5>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-primary btn-sm dropdown-toggle" 
+                                data-bs-toggle="dropdown">
+                            This Month
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">This Week</a></li>
+                            <li><a class="dropdown-item" href="#">This Month</a></li>
+                            <li><a class="dropdown-item" href="#">This Year</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="product-list">
+                    {% for product in top_products %}
+                    <div class="product-item">
+                        <div class="product-image">
+                            <img src="{{ product.image.url|default:'static/img/default-product.png' }}" 
+                                 alt="{{ product.name }}">
+                        </div>
+                        <div class="product-info">
+                            <h6>{{ product.name }}</h6>
+                            <p>{{ product.category.name }}</p>
+                        </div>
+                        <div class="product-sales">
+                            <h6>₦{{ product.total_sales|floatformat:2 }}</h6>
+                            <p>{{ product.units_sold }} sold</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get data from Django context
+    const salesData = {
+        labels: JSON.parse('{{ sales_labels|escapejs }}'),
+        values: JSON.parse('{{ sales_data|escapejs }}')
+    };
+
+    const categoryData = {
+        labels: JSON.parse('{{ category_labels|escapejs }}'),
+        values: JSON.parse('{{ category_data|escapejs }}')
+    };
+
+    // Sales Chart
+    const salesCtx = document.getElementById('salesChart').getContext('2d');
+    const salesChart = new Chart(salesCtx, {
+        type: 'line',
+        data: {
+            labels: salesData.labels,
+            datasets: [{
+                label: 'Sales',
+                data: salesData.values,
+                borderColor: 'rgba(var(--primary-rgb), 1)',
+                backgroundColor: 'rgba(var(--primary-rgb), 0.1)',
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        borderDash: [2, 2]
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    // Categories Chart
+    const categoriesCtx = document.getElementById('categoriesChart').getContext('2d');
+    const categoriesChart = new Chart(categoriesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: categoryData.labels,
+            datasets: [{
+                data: categoryData.values,
+                backgroundColor: [
+                    'rgba(var(--primary-rgb), 0.8)',
+                    'rgba(var(--success-rgb), 0.8)',
+                    'rgba(var(--info-rgb), 0.8)',
+                    'rgba(var(--warning-rgb), 0.8)',
+                    'rgba(var(--danger-rgb), 0.8)'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Handle period changes for sales chart
+    document.querySelectorAll('[data-period]').forEach(button => {
+        button.addEventListener('click', async function() {
+            const period = this.dataset.period;
+            
+            // Update active state
+            document.querySelectorAll('[data-period]').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            this.classList.add('active');
+
+            try {
+                const response = await fetch(`/api/dashboard/sales-data/?period=${period}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+                
+                const data = await response.json();
+                
+                // Update chart data
+                salesChart.data.labels = data.labels;
+                salesChart.data.datasets[0].data = data.values;
+                salesChart.update();
+            } catch (error) {
+                console.error('Error fetching sales data:', error);
+                showNotification('Error fetching sales data', 'error');
+            }
+        });
+    });
+
+    // Initialize tooltips
+    const tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltips.forEach(tooltip => new bootstrap.Tooltip(tooltip));
+});
+
+// Helper function to show notifications
+function showNotification(message, type = 'info') {
+    // Implementation depends on your notification system
+    console.log(`${type}: ${message}`);
+}
+</script>
+{% endblock %}

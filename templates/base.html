@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-layout="vertical">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Nemy POS - Next Generation Point of Sale{% endblock %}</title>
+    
+    <!-- Ultra Premium Dependencies -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link href="{% static 'vendors/simplebar/simplebar.min.css' %}" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{% static 'css/style.bundle.css' %}" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="app-body" data-simplebar>
+    <!-- Modern Preloader -->
+    <div class="app-preloader">
+        <div class="loading-element">
+            <div class="loading-logo">
+                <img src="{% static 'img/logo-animated.svg' %}" alt="Logo">
+            </div>
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+
+    <!-- Command Palette (Ctrl+K) -->
+    <div class="command-palette" id="commandPalette">
+        <div class="command-header">
+            <i class="ri-command-line"></i>
+            <input type="text" placeholder="Search for commands..." class="command-input">
+        </div>
+        <div class="command-results">
+            <!-- Dynamic Results -->
+        </div>
+    </div>
+
+    <!-- App Layout -->
+    <div class="app-container">
+        <!-- Ultra Modern Sidebar -->
+        <aside class="app-sidebar" data-simplebar>
+            <div class="sidebar-header">
+                <div class="brand-box">
+                    <img src="{% static 'img/logo.svg' %}" alt="Logo" class="brand-logo">
+                    <span class="brand-title">Nemy POS</span>
+                </div>
+                <button class="sidebar-toggle">
+                    <i class="ri-arrow-left-line"></i>
+                </button>
+            </div>
+
+            <div class="sidebar-menu">
+                <div class="menu-section">
+                    <div class="menu-heading">MAIN NAVIGATION</div>
+                    <ul class="menu-items">
+                        <li class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            <a href="{% url 'dashboard' %}" class="menu-link">
+                                <i class="ri-dashboard-line"></i>
+                                <span>Dashboard</span>
+                                <span class="menu-badge">New</span>
+                            </a>
+                        </li>
+                        
+                        <li class="menu-item has-submenu">
+                            <a href="#" class="menu-link">
+                                <i class="ri-store-3-line"></i>
+                                <span>Point of Sale</span>
+                                <i class="ri-arrow-right-s-line submenu-arrow"></i>
+                            </a>
+                            <ul class="submenu">
+                                <li><a href="{% url 'pos-dashboard' %}">POS Dashboard</a></li>
+                                <li><a href="{% url 'new-sale' %}">New Sale</a></li>
+                                <li><a href="{% url 'sales-history' %}">Sales History</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="menu-item has-submenu">
+                            <a href="#" class="menu-link">
+                                <i class="ri-stack-line"></i>
+                                <span>Inventory</span>
+                                <i class="ri-arrow-right-s-line submenu-arrow"></i>
+                            </a>
+                            <ul class="submenu">
+                                <li><a href="{% url 'products' %}">Products</a></li>
+                                <li><a href="{% url 'categories' %}">Categories</a></li>
+                                <li><a href="{% url 'stock-management' %}">Stock Management</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="menu-section">
+                    <div class="menu-heading">BUSINESS TOOLS</div>
+                    <ul class="menu-items">
+                        <!-- More menu items -->
+                    </ul>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="quick-actions">
+                    <button class="action-btn" data-bs-toggle="tooltip" title="New Sale">
+                        <i class="ri-add-line"></i>
+                    </button>
+                    <button class="action-btn" data-bs-toggle="tooltip" title="Reports">
+                        <i class="ri-file-chart-line"></i>
+                    </button>
+                    <button class="action-btn" data-bs-toggle="tooltip" title="Settings">
+                        <i class="ri-settings-3-line"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Wrapper -->
+        <main class="main-wrapper">
+            <!-- Top Navigation -->
+            <header class="app-header">
+                <div class="header-left">
+                    <button class="menu-trigger">
+                        <i class="ri-menu-line"></i>
+                    </button>
+                    <div class="search-box">
+                        <i class="ri-search-2-line"></i>
+                        <input type="text" placeholder="Search anything... (Ctrl + /)">
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <div class="header-actions">
+                        <!-- Notifications -->
+                        <div class="dropdown">
+                            <button class="action-btn has-indicator" data-bs-toggle="dropdown">
+                                <i class="ri-notification-3-line"></i>
+                                <span class="indicator"></span>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end notifications-dropdown">
+                                <!-- Notifications content -->
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <button class="action-btn" data-bs-toggle="tooltip" title="Quick Actions">
+                            <i class="ri-apps-2-line"></i>
+                        </button>
+
+                        <!-- User Menu -->
+                        <div class="dropdown">
+                            <button class="user-menu" data-bs-toggle="dropdown">
+                                <img src="{{ request.user.profile_pic.url|default:'https://ui-avatars.com/api/?name='|add:request.user.get_full_name }}" 
+                                     alt="Profile" class="user-image">
+                                <div class="user-info d-none d-md-block">
+                                    <div class="user-name">{{ request.user.get_full_name }}</div>
+                                    <div class="user-role">{{ request.user.role }}</div>
+                                </div>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <div class="dropdown-header">
+                                        <h6>{{ request.user.get_full_name }}</h6>
+                                        <span>{{ request.user.email }}</span>
+                                    </div>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'profile' %}">
+                                    <i class="ri-user-line"></i> My Profile
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'settings' %}">
+                                    <i class="ri-settings-4-line"></i> Settings
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                    <i class="ri-logout-box-line"></i> Sign Out
+                                </a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="page-wrapper">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h1 class="page-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                            <div class="breadcrumb">
+                                {% block breadcrumb %}
+                                <span class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></span>
+                                <span class="breadcrumb-item active">Dashboard</span>
+                                {% endblock %}
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            {% block page_actions %}{% endblock %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Page Content Area -->
+                <div class="page-content">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Sidebar / Quick Panel -->
+        <aside class="quick-panel" data-simplebar>
+            <!-- Quick Panel Content -->
+        </aside>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'vendors/simplebar/simplebar.min.js' %}"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <!-- Custom Scripts -->
+    <script src="{% static 'js/app.bundle.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 
